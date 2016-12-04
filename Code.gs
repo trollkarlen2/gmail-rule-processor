@@ -1,5 +1,5 @@
-// Gmail2GDrive
-// https://github.com/ahochsteger/gmail2gdrive
+// Source:
+// https://github.com/trollkarlen2/gmail-rule-processor (forked from https://github.com/ahochsteger/gmail2gdrive)
 
 /**
  * Returns the label with the given name or creates it if not existing.
@@ -74,7 +74,7 @@ function getOrCreateFolder(folderName) {
  * Main function that processes Gmail attachments and stores them in Google Drive.
  * Use this as trigger function for periodic execution.
  */
-function Gmail2GDrive() {
+function GmailRuleProcessor() {
   if (!GmailApp) return; // Skip script execution if GMail is currently not available (yes this happens from time to time and triggers spam emails!)
   var config = getGmail2GDriveConfig();
   var label = getOrCreateLabel(config.processedLabel);
@@ -114,17 +114,27 @@ function Gmail2GDrive() {
             var folder = getOrCreateFolder(rule.folder);
             var file = folder.createFile(attachment);
             if (rule.filenameFrom && rule.filenameTo && rule.filenameFrom == file.getName()) {
-              var newFilename = Utilities.formatDate(messageDate, config.timezone, rule.filenameTo.replace('%s',message.getSubject()));
+              var newFilename = Utilities.formatDate(messageDate, config.timezone, rule.filenameTo.replace('%s',message.getSubject()).replace('%n',file.getName()));
               Logger.log("INFO:           Renaming matched file '" + file.getName() + "' -> '" + newFilename + "'");
               file.setName(newFilename);
             }
             else if (rule.filenameTo) {
-              var newFilename = Utilities.formatDate(messageDate, config.timezone, rule.filenameTo.replace('%s',message.getSubject()));
+              var newFilename = Utilities.formatDate(messageDate, config.timezone, rule.filenameTo.replace('%s',message.getSubject()).replace('%n',file.getName()));
               Logger.log("INFO:           Renaming '" + file.getName() + "' -> '" + newFilename + "'");
               file.setName(newFilename);
             }
             file.setDescription("Mail title: " + message.getSubject() + "\nMail date: " + message.getDate() + "\nMail link: https://mail.google.com/mail/u/0/#inbox/" + message.getId());
             Utilities.sleep(config.sleepTime);
+          } catch (e) {
+            Logger.log(e);
+          }
+        }
+        
+        if (rule.forwardTo) {
+          try {
+            // See https://developers.google.com/apps-script/reference/gmail/gmail-message#forward(String)
+            message.forward(rule.forwardTo/*, { cc: "", bcc: "" }*/);
+            Logger.log("INFO:           Message was forwarded to '" + rule.forwardTo + "'.");
           } catch (e) {
             Logger.log(e);
           }
