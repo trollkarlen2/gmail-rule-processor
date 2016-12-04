@@ -1,7 +1,7 @@
 /**
- * Configuration for Gmail2GDrive
+ * Configuration for GmailRuleProcessor
  */
-function getGmail2GDriveConfig() {
+function getGmailRuleProcessorConfig() {
   return {
     // Gmail label for processed threads (will be created, if not existing):
     "processedLabel": "to-gdrive/processed",
@@ -29,19 +29,12 @@ function getGmail2GDriveConfig() {
       //  * You can use '%s' to insert the email subject and date format patterns like 'yyyy' for year, 'MM' for month and 'dd' for day as pattern in the filename.
       //    See https://developers.google.com/apps-script/reference/utilities/utilities#formatDate(Date,String,String) for more information on the possible date format strings.
 
-      { 
-        "filter": "to:my.name+scans@gmail.com",
-        "folder": "Scans"
-      },
-      {
-        "filter": "from:example1@example.com",
-        "folder": "Examples/example1"
-      },
-      { 
-        "filter": "from:example2@example.com",
-        "folder": "Examples/example2"
-      },
-      { 
+      { // Mails sent to your_email@example.com which have attachments will be forwarded to your_other_address@example.com.
+        // The attachments themselves will be renamed and saved in the Attachments folder on your Google Drive.
+        "filter": "to:your_email@example.com",
+        "folder": "Attachments",
+        "filenameTo": "yyyy-MM-dd-'%n'",
+        "forwardTo": "your_other_address@example.com"
       },
       { // Replace all files with the variable 'filenameTo' string.
         "filter": "(from:example3a@example.com OR from:example3b@example.com)",

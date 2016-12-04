@@ -76,7 +76,7 @@ function getOrCreateFolder(folderName) {
  */
 function GmailRuleProcessor() {
   if (!GmailApp) return; // Skip script execution if GMail is currently not available (yes this happens from time to time and triggers spam emails!)
-  var config = getGmail2GDriveConfig();
+  var config = getGmailRuleProcessorConfig();
   var label = getOrCreateLabel(config.processedLabel);
   var end, start;
   start = new Date();
