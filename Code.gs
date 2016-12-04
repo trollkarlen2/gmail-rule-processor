@@ -70,6 +70,10 @@ function getOrCreateFolder(folderName) {
   return folder;
 }
 
+function getSanitizedFilename(name) {
+  return name.replace(/[^a-zA-Z0-9 .@]/g, "");
+}
+
 /**
  * Main function that processes Gmail attachments and stores them in Google Drive.
  * Use this as trigger function for periodic execution.
@@ -104,7 +108,8 @@ function GmailRuleProcessor() {
       var messages = thread.getMessages();
       for (var msgIdx=0; msgIdx<messages.length; msgIdx++) {
         var message = messages[msgIdx];
-        Logger.log("INFO:       Processing message: "+message.getSubject() + " (" + message.getId() + ")");
+        var sanitizedFrom = message.getFrom();
+        Logger.log("INFO:       Processing message: "+message.getSubject() + " (" + message.getId() + ") from " + message.getFrom());
         var messageDate = message.getDate();
         var attachments = message.getAttachments();
         for (var attIdx=0; attIdx<attachments.length; attIdx++) {
@@ -112,18 +117,29 @@ function GmailRuleProcessor() {
           Logger.log("INFO:         Processing attachment: "+attachment.getName());
           try {
             var folder = getOrCreateFolder(rule.folder);
-            var file = folder.createFile(attachment);
-            if (rule.filenameFrom && rule.filenameTo && rule.filenameFrom == file.getName()) {
-              var newFilename = Utilities.formatDate(messageDate, config.timezone, rule.filenameTo.replace('%s',message.getSubject()).replace('%n',file.getName()));
-              Logger.log("INFO:           Renaming matched file '" + file.getName() + "' -> '" + newFilename + "'");
-              file.setName(newFilename);
+
+            var driveFilename = attachment.getName();
+            if (
+              (rule.filenameTo && rule.filenameFrom && rule.filenameFrom == attachment.getName())
+            ||
+              (rule.filenameTo)
+            ){
+              driveFilename = Utilities.formatDate(messageDate, config.timezone, rule.filenameTo
+                                                   .replace('%s',getSanitizedFilename(message.getSubject()))
+                                                   .replace('%f',getSanitizedFilename(message.getFrom()))
+                                                   .replace('%n',attachment.getName()));
             }
-            else if (rule.filenameTo) {
-              var newFilename = Utilities.formatDate(messageDate, config.timezone, rule.filenameTo.replace('%s',message.getSubject()).replace('%n',file.getName()));
-              Logger.log("INFO:           Renaming '" + file.getName() + "' -> '" + newFilename + "'");
-              file.setName(newFilename);
+            
+            if (!folder.getFilesByName(driveFilename).hasNext()) {
+              var file = folder.createFile(attachment);
+              file.setName(driveFilename);
+              file.setDescription("Mail title: " + message.getSubject() + "\nMail date: " + message.getDate() + "\nMail link: https://mail.google.com/mail/u/0/#inbox/" + message.getId());
+              Logger.log("INFO:           Attachment '" + attachment.getName() + "' saved as '" + driveFilename + "'");
+            } else {
+              // File already exists (based on its name)
+              Logger.log("WARN:           Cannot save '" + attachment.getName() + "' as '" + driveFilename + "' since it already exists.");
             }
-            file.setDescription("Mail title: " + message.getSubject() + "\nMail date: " + message.getDate() + "\nMail link: https://mail.google.com/mail/u/0/#inbox/" + message.getId());
+
             Utilities.sleep(config.sleepTime);
           } catch (e) {
             Logger.log(e);

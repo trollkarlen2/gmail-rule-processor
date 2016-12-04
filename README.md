@@ -18,12 +18,14 @@ Setup
 -----
 
 1. Open [Google Apps Script](https://script.google.com/).
-2. Create an empty project.
+2. Create an empty project. May may need to click the "Start Scripting" button.
 3. Give the project a name (e.g. GmailRuleProcessor)
 4. Replace the content of the created file Code.gs with the provided [Code.gs](https://github.com/trollkarlen2/gmail-rule-processor/blob/master/Code.gs) and save the changes.
 5. Create a new script file with the name 'Config' and replace its content with the provided [Config.gs](https://github.com/trollkarlen2/gmail-rule-processor/blob/master/Config.gs) and save the changes.
 6. Adjust the configuration to your needs. It is recommended to restrict the timeframe using 'newerThan' to prevent running into API quotas by Google.
-7. Test the script by manually executing the function GmailRuleProcessor.
+7. Test the script by manually executing the function GmailRuleProcessor. This is important since the script needs to be 
+   granted permissions to access your Google data and you will be prompted to authorize this the first time you run the 
+   script manually. You can review the execution logs, if things did not work as expected, by clicking View > Logs. 
 8. Create a time based trigger which periodically executes 'GmailRuleProcessor' (e.g. once per day).
 
 
