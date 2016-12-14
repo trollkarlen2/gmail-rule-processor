@@ -22,10 +22,11 @@ function getOrCreateSubFolder(baseFolder,folderArray) {
   var nextFolderName = folderArray.shift();
   var nextFolder = null;
   var folders = baseFolder.getFolders();
-  for (var i=0; i<folders.length; i++) {
-    var folder = folders[i];
-    if (folders[i].getName() == nextFolderName) {
-      nextFolder = folders[i];
+  while (folders.hasNext()) {
+    folder = folders.next();
+    folderName = folder.getName();
+    if (folderName == nextFolderName){
+      nextFolder = folder;
       break;
     }
   }
